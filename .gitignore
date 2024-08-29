@@ -1,0 +1,61 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Django migrations
+*/migrations/*
+
+# Logs
+*.log
+*.out
+*.err
+
+# Local environment settings
+.env
+
+# SQL database
+*.sqlite3
+
+# Media files
+/media/
+
+# Static files
+/static/
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Django stuff:
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.pyproj
+*.sublime-project
+*.sublime-workspace
+
+# Celery task queue
+celerybeat-schedule
+
+# Coverage reports
+htmlcov/
+.coverage
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Environments
+.idea/
+.vscode/
+*.swp
+.DS_Store
