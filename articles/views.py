@@ -1,5 +1,6 @@
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, NotFound
@@ -11,6 +12,7 @@ from .serializers import ArticleSerializer
 class ArticleListCreateView(ListCreateAPIView):
     serializer_class = ArticleSerializer
     permission_classes = [AllowAny]  # Allow anyone to list published articles
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         if self.request.method == 'GET':
@@ -28,6 +30,7 @@ class ArticleListCreateView(ListCreateAPIView):
 class UserPublishedArticleListView(ListAPIView):
     serializer_class = ArticleSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         user = self.request.user
@@ -37,6 +40,7 @@ class UserPublishedArticleListView(ListAPIView):
 class UserPrivateArticleListView(ListAPIView):
     serializer_class = ArticleSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         user = self.request.user
