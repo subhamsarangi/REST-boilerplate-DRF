@@ -18,3 +18,5 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'myauth.backends.EmailBackend',
 ]```
+
+set DJANGO_SETTINGS_MODULE ='myproject.settings.dev'
