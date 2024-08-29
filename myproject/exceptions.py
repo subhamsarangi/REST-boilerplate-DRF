@@ -18,10 +18,21 @@ def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
 
     if response is not None:
-        if response.status_code == status.HTTP_401_UNAUTHORIZED:
+        if response.status_code == status.HTTP_403_FORBIDDEN:
             response.data = {
-                'detail': 'Your session has expired or the token is invalid. Please log in again.',
-                'code': 'token_not_valid'
+                'detail': response.data.get('detail', 'You do not have permission to perform this action.'),
+                'status': response.status_code
+            }
+        elif response.status_code == status.HTTP_401_UNAUTHORIZED:
+            response.data = {
+                'detail': 'Authentication failed.',
+                'code': 'token_not_valid',
+                'messages': [
+                    {
+                        'message': 'The provided token is either invalid or expired. Please check your token and try again.'
+                    }
+                ],
+                'status': response.status_code
             }
 
     return response

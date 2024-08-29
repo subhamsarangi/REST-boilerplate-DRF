@@ -1,15 +1,16 @@
+from rest_framework import status
 from rest_framework.response import Response
-from rest_framework import generics, permissions, status
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.generics import ListCreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.exceptions import PermissionDenied, NotFound
 
 from .models import Article
 from .serializers import ArticleSerializer
 
 
-
-class ArticleListCreateView(generics.ListCreateAPIView):
+class ArticleListCreateView(ListCreateAPIView):
     serializer_class = ArticleSerializer
-    permission_classes = [permissions.AllowAny]  # Allow anyone to list published articles
+    permission_classes = [AllowAny]  # Allow anyone to list published articles
 
     def get_queryset(self):
         if self.request.method == 'GET':
@@ -21,10 +22,10 @@ class ArticleListCreateView(generics.ListCreateAPIView):
         if self.request.user and not self.request.user.is_anonymous:
             serializer.save(owner=self.request.user)
         else:
-            raise permissions.PermissionDenied("User must be authenticated to create an article.")
+            raise PermissionDenied("User must be authenticated to create an article.")
 
 
-class UserPublishedArticleListView(generics.ListAPIView):
+class UserPublishedArticleListView(ListAPIView):
     serializer_class = ArticleSerializer
     permission_classes = [IsAuthenticated]
 
@@ -33,7 +34,7 @@ class UserPublishedArticleListView(generics.ListAPIView):
         return Article.objects.filter(is_published=True, owner=user)
 
 
-class UserPrivateArticleListView(generics.ListAPIView):
+class UserPrivateArticleListView(ListAPIView):
     serializer_class = ArticleSerializer
     permission_classes = [IsAuthenticated]
 
@@ -42,30 +43,46 @@ class UserPrivateArticleListView(generics.ListAPIView):
         return Article.objects.filter(is_published=False, owner=user)
 
 
-class ArticleRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+class ArticleRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = ArticleSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def get_queryset(self):
-        """
-            Ensure that the article is either published or owned by the current user.
-        """
-        user = self.request.user
-        published_articles = Article.objects.filter(id=self.kwargs['pk'], is_published=True)
-        owned_articles = Article.objects.filter(id=self.kwargs['pk'], owner=user)
+    # Filtering Across All Methods: If you want to apply the same filter across all methods in your view
+    # (list, retrieve, update, delete), get_queryset is a good place to centralize this logic.
 
-        return published_articles | owned_articles
+    def get_object(self):
+        slug = self.kwargs.get('slug')
+        try:
+            return Article.objects.get(slug=slug)
+        except Article.DoesNotExist:
+            raise NotFound("Article not found")
 
-    def perform_update(self, serializer):
-        user = self.request.user
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.owner != request.user and not instance.is_published:
+            raise PermissionDenied("You do not have permission to view this article.")
+        return Response({
+            'detail': 'Article successfully fetched',
+            'data': self.get_serializer(instance).data
+        })
+
+    def perform_update(self, serializer): # pre-delete update
         article = self.get_object()
+        user = self.request.user
         if article.owner != user:
-            raise permissions.PermissionDenied("You do not have permission to edit this article.")
+            raise PermissionDenied("You do not have permission to edit this article.")
         serializer.save(owner=user)
+    
+    def update(self, request, *args, **kwargs):
+        super().update(request, *args, **kwargs)
+        return Response({'detail': 'Article successfully updated'}, status=status.HTTP_200_OK)
+
+    def perform_destroy(self, instance): # pre-delete logic
+        instance = self.get_object()
+        if instance.owner != self.request.user:
+            raise PermissionDenied("You do not have permission to delete this article.")
+        instance.delete()
 
     def delete(self, request, *args, **kwargs):
-        article = self.get_object()
-        if article.owner != request.user:
-            raise permissions.PermissionDenied("You do not have permission to delete this article.")
         super().delete(request, *args, **kwargs)
         return Response({'detail': 'Article successfully deleted'}, status=status.HTTP_204_NO_CONTENT)
