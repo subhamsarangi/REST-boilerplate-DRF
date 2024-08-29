@@ -2,7 +2,13 @@ from .base import *
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['my-production-domain.com']
+ALLOWED_HOSTS = ['backend-service.com']
+
+CORS_ALLOWED_ORIGINS = [
+    'https://frontend-service.com',
+]
+
+CORS_URLS_REGEX = r'^/api/.*$'
 
 DATABASES = {
     'default': {

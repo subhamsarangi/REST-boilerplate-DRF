@@ -19,6 +19,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+    
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("email taken.")
+        return value
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
