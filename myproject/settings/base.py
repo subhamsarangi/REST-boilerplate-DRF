@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from decouple import config
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY')
@@ -72,7 +73,7 @@ REST_FRAMEWORK = {
     ),
     'EXCEPTION_HANDLER': 'myproject.exceptions.custom_exception_handler',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 1,
+    'PAGE_SIZE': 5,
 }
 
 SIMPLE_JWT = {
@@ -117,3 +118,8 @@ STATIC_URL = 'static/'
 MEDIA_URL = 'media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = CELERY_TASK_SERIALIZER
+CELERY_TIMEZONE = TIME_ZONE
