@@ -7,7 +7,7 @@ from rest_framework.viewsets import ModelViewSet
 from .models import Article
 from .serializers import ArticleSerializer
 from .mixins import ArticlePermissionMixin
-from .tasks import basic_article_task
+from .tasks import increment_article_view_count
 
 
 class ArticleListCreateView(ListCreateAPIView):
@@ -57,12 +57,13 @@ class ArticleViewSet(ArticlePermissionMixin, ModelViewSet):
     lookup_field = 'slug'
 
     def get_queryset(self):
-        basic_article_task.delay("aws certifications", "reactjs concepts")
         return Article.objects.all()
 
     def get_object(self):
         article = super().get_object()
         self.check_article_permissions(article, self.action)
+        task = increment_article_view_count.delay(article.slug)
+        print(task.id, "-------------------------------<.")
         return article
 
     def perform_update(self, serializer):

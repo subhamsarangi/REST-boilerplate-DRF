@@ -20,6 +20,3 @@ AUTHENTICATION_BACKENDS = [
 ]```
 
 set DJANGO_SETTINGS_MODULE ='myproject.settings.dev'
-
-
-celery -A myproject worker -l info
