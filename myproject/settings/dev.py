@@ -22,3 +22,10 @@ DATABASES = {
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+CELERY_BROKER_URL = config('CELERY_BROKER_URL') # or use your preferred broker
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND') 
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
