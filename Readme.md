@@ -10,7 +10,7 @@ This project is a **Django** _web application_ that leverages various tools and 
 7. ✅ **URL-friendly slugs** are generated to improve readability
 8. ✅ **pagination**, public and private listing
 9. ✅ **file upload to aws** 
-10. ✅**full text search** using postgres.
+10. ✅**full text search** with **trigrams for Fuzzy Matching** using postgres.
 11. ✅ view count in **mongo db**
 12. **hierarchial** comment tree.
 13. real-time user interation updates via **socket**

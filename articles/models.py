@@ -29,12 +29,16 @@ class Article(models.Model):
         ]
 
     def save(self, *args, **kwargs):
-        if not self.slug or self.is_title_changed() or self.is_content_changed():
-            self.search_vector = SearchVector('title', 'content')
-
         if not self.slug or self.is_title_changed():
             self.slug = self.generate_unique_slug()
+
+        is_new = self.pk is None
+        is_tc_changed = self.is_title_changed() or self.is_content_changed()
         super().save(*args, **kwargs)
+        if is_new or is_tc_changed:
+            Article.objects.filter(pk=self.pk).update(
+                search_vector=SearchVector('title', 'content', config='simple')
+            )
     
     def delete(self, *args, **kwargs):
         if self.heroimage:
@@ -54,7 +58,6 @@ class Article(models.Model):
             random_slug = ''.join(secrets.choice(characters) for _ in range(length))
             if not Article.objects.filter(slug=random_slug).exists():
                 return f"{slugify(self.title)}-{random_slug}"
-
 
     def is_title_changed(self):
         if self.pk:

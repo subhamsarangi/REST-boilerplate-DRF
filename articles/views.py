@@ -1,13 +1,13 @@
-from django.contrib.postgres.search import SearchQuery, SearchVector
+from django.contrib.postgres.search import SearchQuery, SearchVector, TrigramSimilarity, SearchRank
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.generics import ListCreateAPIView, ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import ModelViewSet
+from django.db.models import F, Q
 from django.http import JsonResponse
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-
 
 from .models import Article
 from .serializers import ArticleSerializer
@@ -23,11 +23,18 @@ class ArticleListCreateView(ListCreateAPIView):
     def get_queryset(self):
         if self.request.method == 'GET':
             queryset = Article.objects.filter(is_published=True)
-            search_query = self.request.query_params.get('search', None)
-            if search_query:
+            query = self.request.query_params.get('search', None)
+            if query:                
                 search_vector = SearchVector('title', 'content')
-                search_query = SearchQuery(search_query)
-                queryset = queryset.annotate(search=search_vector).filter(search=search_query)
+                search_query = SearchQuery(query)
+                queryset = queryset.annotate(
+                    rank=SearchRank(search_vector, search_query),
+                    title_similarity=TrigramSimilarity('title', query),
+                    content_similarity=TrigramSimilarity('content', query)
+                ).filter(
+                    Q(rank__gt=0.1) | Q(title_similarity__gt=0.3) | Q(content_similarity__gt=0.3)
+                ).order_by('-rank', '-title_similarity', '-content_similarity')
+                # queryset = queryset.annotate(search=search_vector).filter(search=search_query)
             return queryset
         return Article.objects.all()
 
