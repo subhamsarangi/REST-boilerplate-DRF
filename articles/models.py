@@ -6,6 +6,7 @@ import boto3
 from django.db import models
 from django.utils.text import slugify
 from django.conf import settings
+from django.contrib.postgres.search import SearchVectorField, SearchVector
 
 from myauth.models import User
 from .utils import get_image_upload_path
@@ -20,8 +21,17 @@ class Article(models.Model):
     is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    search_vector = SearchVectorField(null=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['search_vector']),
+        ]
 
     def save(self, *args, **kwargs):
+        if not self.slug or self.is_title_changed() or self.is_content_changed():
+            self.search_vector = SearchVector('title', 'content')
+
         if not self.slug or self.is_title_changed():
             self.slug = self.generate_unique_slug()
         super().save(*args, **kwargs)
@@ -50,6 +60,12 @@ class Article(models.Model):
         if self.pk:
             old_article = Article.objects.get(pk=self.pk)
             return old_article.title != self.title
+        return False
+    
+    def is_content_changed(self):
+        if self.pk:
+            old_article = Article.objects.get(pk=self.pk)
+            return old_article.content != self.content
         return False
 
     def __str__(self):

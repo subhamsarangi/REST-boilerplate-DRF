@@ -1,3 +1,4 @@
+from django.contrib.postgres.search import SearchQuery, SearchVector
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.generics import ListCreateAPIView, ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -17,7 +18,13 @@ class ArticleListCreateView(ListCreateAPIView):
 
     def get_queryset(self):
         if self.request.method == 'GET':
-            return Article.objects.filter(is_published=True)
+            queryset = Article.objects.filter(is_published=True)
+            search_query = self.request.query_params.get('search', None)
+            if search_query:
+                search_vector = SearchVector('title', 'content')
+                search_query = SearchQuery(search_query)
+                queryset = queryset.annotate(search=search_vector).filter(search=search_query)
+            return queryset
         return Article.objects.all()
 
     def perform_create(self, serializer):
@@ -26,26 +33,6 @@ class ArticleListCreateView(ListCreateAPIView):
             serializer.save(owner=self.request.user)
         else:
             raise PermissionDenied("User must be authenticated to create an article.")
-
-
-class UserPublishedArticleListView(ListAPIView):
-    serializer_class = ArticleSerializer
-    permission_classes = [IsAuthenticated]
-    pagination_class = PageNumberPagination
-
-    def get_queryset(self):
-        user = self.request.user
-        return Article.objects.filter(is_published=True, owner=user)
-
-
-class UserPrivateArticleListView(ListAPIView):
-    serializer_class = ArticleSerializer
-    permission_classes = [IsAuthenticated]
-    pagination_class = PageNumberPagination
-
-    def get_queryset(self):
-        user = self.request.user
-        return Article.objects.filter(is_published=False, owner=user)
 
 
 # Filtering Across All Methods: If you want to apply the same filter across all methods in your view
@@ -57,7 +44,8 @@ class ArticleViewSet(ArticlePermissionMixin, ModelViewSet):
     lookup_field = 'slug'
 
     def get_queryset(self):
-        return Article.objects.all()
+        queryset = Article.objects.all()
+        return queryset
 
     def get_object(self):
         article = super().get_object()
@@ -71,3 +59,35 @@ class ArticleViewSet(ArticlePermissionMixin, ModelViewSet):
 
     def perform_destroy(self, instance):
         super().perform_destroy(instance)
+
+
+class UserPublishedArticleListView(ListAPIView):
+    serializer_class = ArticleSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Article.objects.filter(is_published=True, owner=user)
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            search_vector = SearchVector('title', 'content')
+            search_query = SearchQuery(search_query)
+            queryset = queryset.annotate(search=search_vector).filter(search=search_query)
+        return queryset
+
+
+class UserPrivateArticleListView(ListAPIView):
+    serializer_class = ArticleSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Article.objects.filter(is_published=False, owner=user)
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            search_vector = SearchVector('title', 'content')
+            search_query = SearchQuery(search_query)
+            queryset = queryset.annotate(search=search_vector).filter(search=search_query)
+        return queryset
