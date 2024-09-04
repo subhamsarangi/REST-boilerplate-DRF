@@ -19,11 +19,14 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
+    'channels',
     'bcrypt',
     'myauth',
     'articles',
-    'channels',
 ]
+
+ASGI_APPLICATION = 'myproject.asgi.application'
+WSGI_APPLICATION = 'myproject.wsgi.application'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -53,9 +56,6 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = 'myproject.wsgi.application'
-
 
 DATABASES = {
     'default': {
@@ -124,5 +124,3 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = CELERY_TASK_SERIALIZER
 CELERY_TIMEZONE = TIME_ZONE
-
-ASGI_APPLICATION = 'myproject.asgi.application'
