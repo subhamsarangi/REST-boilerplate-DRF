@@ -42,3 +42,12 @@ MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaw
 
 CELERY_BROKER_URL = config('CELERY_BROKER_URL') # or use your preferred broker
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND') 
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [(config('REDIS_BROKER_URL'), config('REDIS_BROKER_PORT'))],
+        },
+    },
+}

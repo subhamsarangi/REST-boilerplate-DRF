@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'bcrypt',
+    'channels',
     'myauth',
     'articles',
 ]
@@ -123,3 +124,5 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = CELERY_TASK_SERIALIZER
 CELERY_TIMEZONE = TIME_ZONE
+
+ASGI_APPLICATION = 'myproject.asgi.application'

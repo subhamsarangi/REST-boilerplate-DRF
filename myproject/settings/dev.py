@@ -26,3 +26,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CELERY_BROKER_URL = config('CELERY_BROKER_URL') # or use your preferred broker
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
