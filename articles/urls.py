@@ -13,4 +13,5 @@ urlpatterns = [
     path('articles/user/private/', views.UserPrivateArticleListView.as_view(), name='user_private_articles'),
     # path('articles/<slug:slug>/', views.ArticleRetrieveUpdateDestroyView.as_view(), name='article-detail-update-delete'),
     path('', include(router.urls)),
+    path('send-message/', views.send_message),
 ]

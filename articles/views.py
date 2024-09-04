@@ -4,6 +4,10 @@ from rest_framework.generics import ListCreateAPIView, ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import ModelViewSet
+from django.http import JsonResponse
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 
 from .models import Article
 from .serializers import ArticleSerializer
@@ -91,3 +95,19 @@ class UserPrivateArticleListView(ListAPIView):
             search_query = SearchQuery(search_query)
             queryset = queryset.annotate(search=search_vector).filter(search=search_query)
         return queryset
+
+
+def send_message(request):
+    message = request.POST.get('message', 'Default message')
+    group_name = 'some_room_name'  # Ensure this matches the group in your consumer
+
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        group_name,
+        {
+            'type': 'chat_message',
+            'message': message
+        }
+    )
+
+    return JsonResponse({'status': 'Message sent'})
